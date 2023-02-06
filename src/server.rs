@@ -67,19 +67,29 @@ let mut tokens = match TOKENS.lock() {
             let success_with_addr = format!("{}Client address: {}", success, client_addr);
             stream.write(success_with_addr.as_bytes()).unwrap();
             stream.flush().unwrap();
+            
+            loop {
+                let mut buffer2 =  [0; 512];
+                let bytes_read2 = stream.read(&mut buffer2).unwrap();
+                let incoming_message2 = String::from_utf8_lossy(&buffer2[..bytes_read2]);
+                println!("Server: Received message from client: {}", incoming_message2);
+    
+                let incoming_message2 = incoming_message2.trim_end_matches("\r\n\r\n");
+                if incoming_message2.to_lowercase() == "stop" {
+                    println!("User initiated the disconnection!!!!!!");
+                    let stop_message = "disconnect";
+                    stream.write(stop_message.as_bytes()).unwrap();
+                    stream.flush().unwrap();
+                    break;
+                }
 
-            let mut buffer2 =  [0; 512];
-            let bytes_read2 = stream.read(&mut buffer2).unwrap();
-            let incoming_message2 = String::from_utf8_lossy(&buffer2[..bytes_read2]);
-            println!("Server: Received message from client: {}", incoming_message2);
-  
-            let incoming_message2 = incoming_message2.trim_end_matches("\r\n\r\n");
-            let uppercase_message = incoming_message2.to_ascii_uppercase();
+                let uppercase_message = incoming_message2.to_ascii_uppercase();
 
-            println!("Server: Response message sent by server: {}", uppercase_message);
-            let response = format!("HTTP/1.1 200 OK\r\n\r\n{}", uppercase_message);
-            stream.write(response.as_bytes()).unwrap();
-            stream.flush().unwrap();
+                println!("Server: Response message sent by server: {}", uppercase_message);
+                let response = format!("HTTP/1.1 200 OK\r\n\r\n{}", uppercase_message);
+                stream.write(response.as_bytes()).unwrap();
+                stream.flush().unwrap();
+            }
         } else {
             // send failure message to client
             let failure = "Server: Password authentication failed".to_string();

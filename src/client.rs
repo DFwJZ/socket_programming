@@ -44,28 +44,33 @@ fn main() {
     println!("respnse: {}\nclient_address: {}", response, client_addr);
 
     if response == "Authentication successful!" {
+        loop {
+            // read message from the user
+            let mut message = String::new();
+            println!("Enter message to send to server: ");
+            io::stdin().read_line(&mut message).unwrap();
+            message = message.trim().to_string();
 
-        // read message from the user
-        let mut message = String::new();
-        println!("Enter message to send to server: ");
-        io::stdin().read_line(&mut message).unwrap();
-        message = message.trim().to_string();
+            // sned message to server
+            stream.write(message.as_bytes()).unwrap();
+            stream.flush().unwrap_or_else(|error| {
+                println!("Error sending message: {:?}", error);
+            });
 
-        // sned message to server
-        stream.write(message.as_bytes()).unwrap();
-        stream.flush().unwrap_or_else(|error| {
-            println!("Error sending message: {:?}", error);
-        });
+            if stream.flush().is_ok() {
+                println!("Okay!")
+            }
 
-        if stream.flush().is_ok() {
-            println!("Okay!")
+            // read confirmation from server
+            let mut response_message = [0; 512];
+            let bytes_read_message = stream.read(&mut response_message).unwrap();
+            let response_message_string = String::from_utf8_lossy(&response_message[..bytes_read_message]).to_string();
+            if response_message_string == "disconnect" {
+                println!("Disconnected from the server...");
+                break;
+            }
+            println!("Client: Response from server: {}", response_message_string);
         }
-
-        // read confirmation from server
-        let mut response1 = String::new();
-        stream.read_to_string(&mut response1).unwrap();
-
-        println!("Client: Response from server: {}", response1);
     } else {
         println!("I am getting {}", response);
         println!("Authentication failed.");
