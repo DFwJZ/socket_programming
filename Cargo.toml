@@ -15,3 +15,4 @@ path = "src/client.rs"
 
 
 [dependencies]
+lazy_static = "1.4.0"
