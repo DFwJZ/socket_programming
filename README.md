@@ -5,9 +5,9 @@
 ## No SSL or TLS implemented
 1. Run `cargo build` to buid the program
 
-2. Run `./server` on one terminal to start the server
+2. Run `cargo run --bin server` on one terminal to start the server
 
-3. Run `./client` on a separate terminal window to start client side 
+3. Run `cargo run --bin client` on a separate terminal window to start client side 
 
 4. Follow the instruction on the command line to continue the program.
 
@@ -31,13 +31,20 @@
 
 5. Run `cargo build` to buid the program
 
-6. Run `./tls_server` on one terminal to start the server
+6. Run `cargo run --bin tls_server` on one terminal to start the server
 
-7. Run `./tls_client` on a separate terminal window to start client side 
+7. Run `cargo run --bin tls_client` on a separate terminal window to start client side 
 
 8. Follow the instruction on the command line to continue the program. 
 
-> reference <br>
+
+
+
+<br>
+<br>
+<br>
+
+### Reference <br>
 > 1. [How to install the Securly SSL certificate on Mac OSX ? ](https://support.securly.com/hc/en-us/articles/206058318-How-to-install-the-Securly-SSL-certificate-on-Mac-OSX-)
 > 2. [Generating a self-signed certificate using OpenSSL](https://www.ibm.com/docs/en/api-connect/10.0.1.x?topic=overview-generating-self-signed-certificate-using-openssl)
 > 3. extern crate used: [native-tls](https://crates.io/crates/native-tls), [openssl](https://crates.io/crates/openssl), [lazy_static](https://crates.io/crates/lazy_static)
