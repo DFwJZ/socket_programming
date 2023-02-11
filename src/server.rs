@@ -28,13 +28,13 @@ fn handle_client(mut stream: TcpStream) {
         }
     };
 
-let mut tokens = match TOKENS.lock() {
-        Ok(guard) => guard,
-        Err(e) => {
-            println!("Error locking tokens: {}", e);
-            return;
-        }
-    };
+    let mut tokens = match TOKENS.lock() {
+            Ok(guard) => guard,
+            Err(e) => {
+                println!("Error locking tokens: {}", e);
+                return;
+            }
+        };
 
 
     let mut buffer = [0; 512];

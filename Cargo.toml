@@ -13,6 +13,15 @@ path = "src/server.rs"
 name = "client"
 path = "src/client.rs"
 
+[[bin]]
+name = "tls_server"
+path = "src/tls_server.rs"
+
+[[bin]]
+name = "tls_client"
+path = "src/tls_client.rs"
 
 [dependencies]
+openssl = "0.10.45"
 lazy_static = "1.4.0"
+native-tls = "0.2.11"
