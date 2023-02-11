@@ -12,25 +12,17 @@ use native_tls::{Identity, TlsAcceptor, TlsStream};
 // use rustls::internal::pemfile;
 
 lazy_static! {
-    static ref USERS: Mutex<HashMap<String, String>> = Mutex::new([("user1".to_string(), "password1".to_string()),
+    static ref USERS: Arc<Mutex<HashMap<String, String>>> = Arc::new(Mutex::new([("user1".to_string(), "password1".to_string()),
                                             ("user2".to_string(), "password2".to_string()),
-                                            ("1".to_string(), "2".to_string())].iter().cloned().collect());
+                                            ("1".to_string(), "2".to_string())].iter().cloned().collect()));
 
-    static ref TOKENS: Mutex<HashMap<String, String>> = Mutex::new(HashMap::new());
-
-    // // Load the cert
-    // static ref CERT: X509 = X509::from_pem(std::fs::read("./certs/cert.pem").unwrap().as_slice()).unwrap();
-
-    // // Load the private key file
-    // static ref PKEY: PKey<Private> = PKey::private_key_from_pem(std::fs::read("./certs/key.pem").unwrap().as_slice()).unwrap();
-    // Load ca cert
-    // static ref CA_CERT: PathBuf = PathBuf::from("./certs/ca.pem");
+    static ref TOKENS: Arc<Mutex<HashMap<String, String>>> = Arc::new(Mutex::new(HashMap::new()));
 }
 
-fn handle_control_channel(stream: TlsStream<TcpStream>) {
+fn handle_control_channel(stream: TlsStream<TcpStream>, users: Arc<Mutex<HashMap<String, String>>>, tokens: Arc<Mutex<HashMap<String, String>>>) {
 
     let mut control_stream = stream;
-    let users = match USERS.lock() {
+    let users = match users.lock() {
         Ok(guard) => guard,
         Err(e) => {
             println!("Error locking users: {}", e);
@@ -38,14 +30,13 @@ fn handle_control_channel(stream: TlsStream<TcpStream>) {
         }
     };
 
-    let mut tokens = match TOKENS.lock() {
+    let mut tokens = match tokens.lock() {
             Ok(guard) => guard,
             Err(e) => {
                 println!("Error locking tokens: {}", e);
                 return;
             }
         };
-
 
     let mut buffer = [0; 512];
     // read the client's message
@@ -150,9 +141,11 @@ fn main() {
             Ok(stream) => {
                 let acceptor = acceptor.clone();
                 println!("Accepted connection from {}", stream.peer_addr().unwrap());
+                let users = USERS.clone();
+                let tokens = TOKENS.clone();
                 thread::spawn(move || {
                     let ssl_stream = acceptor.accept(stream).unwrap();
-                    handle_control_channel(ssl_stream);
+                    handle_control_channel(ssl_stream, users, tokens);
                 });
             },
             Err(e) => println!("Error: {}", e),
