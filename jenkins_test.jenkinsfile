@@ -1,0 +1,21 @@
+pipeline {
+    agent any
+
+    stage {
+        stage('Build') {
+            steps {
+                sh 'cargo build'
+            }
+        }
+
+        stage('Test') {
+            steps {
+                sh 'cargo test'
+                sh 'cargo run --bin tls_server &'
+                sh 'cargo run --bin tls_client'
+                sh 'pkill tls_server'
+            }
+        }
+
+    }
+}
