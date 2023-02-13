@@ -1,8 +1,5 @@
 #[macro_use] 
 extern crate lazy_static;
-extern crate openssl;
-extern crate simplelog;
-use log::Log;
 use std::collections::HashMap;
 use std::sync::{Mutex, Arc};
 use std::io::prelude::*;
@@ -11,9 +8,11 @@ use std::net::TcpStream;
 use std::thread;
 use std::fs::File;
 use native_tls::{Identity, TlsAcceptor, TlsStream};
-use log::{LevelFilter};
+use log::LevelFilter;
+use log::Log;
 use simplelog::*;
-
+use rpassword;
+use time::macros::format_description;
 
 lazy_static! {
     static ref USERS: Arc<Mutex<HashMap<String, String>>> = Arc::new(Mutex::new([("user1".to_string(), "password1".to_string()),

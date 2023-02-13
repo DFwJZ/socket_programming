@@ -26,7 +26,12 @@
     ```
     [dependencies]
     openssl = "0.10.45"
+    lazy_static = "1.4.0"
     native-tls = "0.2.11"
+    simplelog = "0.12.0"
+    log = "0.4.17"
+    time = "0.3.17"
+    rpassword = "7.2.0"
     ```
 
 5. Run `cargo build` to buid the program
@@ -47,4 +52,4 @@
 ### Reference <br>
 > 1. [How to install the Securly SSL certificate on Mac OSX ? ](https://support.securly.com/hc/en-us/articles/206058318-How-to-install-the-Securly-SSL-certificate-on-Mac-OSX-)
 > 2. [Generating a self-signed certificate using OpenSSL](https://www.ibm.com/docs/en/api-connect/10.0.1.x?topic=overview-generating-self-signed-certificate-using-openssl)
-> 3. extern crate used: [native-tls](https://crates.io/crates/native-tls), [openssl](https://crates.io/crates/openssl), [lazy_static](https://crates.io/crates/lazy_static)
+> 3. dependencies reference: [native-tls](https://crates.io/crates/native-tls), [openssl](https://crates.io/crates/openssl), [lazy_static](https://crates.io/crates/lazy_static), [simplelog](https://crates.io/crates/simplelog), [log](https://crates.io/crates/log), [time](https://crates.io/crates/time), [rpassword](https://crates.io/crates/rpassword)
