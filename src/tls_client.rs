@@ -4,8 +4,6 @@ use std::io;
 use native_tls::TlsConnector;
 
 fn main() {
-    let mut credentials = String::new();
-
     // Create a new SSL connector
     let connector = TlsConnector::new().unwrap();
 
@@ -21,14 +19,13 @@ fn main() {
     };
 
     // Read user input of username and password
+    let mut credentials = String::new();
     println!("Enter your username: ");
     io::stdin().read_line(&mut credentials).unwrap();
     let username = credentials.trim().to_string();
 
-    credentials = String::new();
-    println!("Enter your password: ");
-    io::stdin().read_line(&mut credentials).unwrap();
-    let password = credentials.trim().to_string();
+    let password = rpassword::prompt_password("Enter your password: ").unwrap();
+    let password = password.trim().to_string();
 
     // Combine username and password with a space separator
     let credentials = format!("{} {}", username, password);
@@ -64,7 +61,7 @@ fn main() {
     if response == "Authentication successful!" {
        
         loop {
-             println!("Enter message to send to server: ");
+            println!("Enter message to send to server: ");
             // read message from the user
             let mut message = String::new();
 
