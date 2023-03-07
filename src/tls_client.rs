@@ -72,92 +72,18 @@ async fn main() {
 
     tls_stream.write_all(credentials.as_bytes()).await.unwrap();
 
-    handle_server(tls_stream).await;
-    // let mut buf = [0; 512];
-    // let bytes_read = tls_stream.read(&mut buf).await.unwrap();
-    // let control_msg = String::from_utf8_lossy(&buf[..bytes_read]);
-
-    // println!("I am getting {}", control_msg);
+    // Read the response from the server, if authentication is successful, then handle the server.
+    let mut buf = [0; 512];
+    let bytes_read = tls_stream.read(&mut buf).await.unwrap();
+    let control_msg = String::from_utf8_lossy(&buf[..bytes_read]);
     
-    // if control_msg == "Authentication successful!" {
-    //     handle_server(tls_stream).await;
-    // } else {
-    //     println!("I am getting {}", control_msg);
-    //     println!("Authentication failed.");
-    // }
+    // Trim the authentication message.
+    let control_msg = control_msg.trim().to_string();
+
+    match control_msg.as_str() {
+        "Authentication successful!" => {
+            handle_server(tls_stream).await;
+        },
+        _ => println!("Authentication failed."),
+    }
 }
-
-
-// use std::io::{self};
-// use std::sync::mpsc::{channel, Sender};
-
-// use native_tls::{TlsConnector};
-// use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
-// use tokio::net::TcpStream as TokioTcpStream;
-// use tokio_native_tls::{TlsConnector as TokioTlsConnector};
-
-// #[tokio::main]
-// async fn main() -> Result<(), Box<dyn std::error::Error>> {
-//     // Create a new SSL connector
-//     let connector = TlsConnector::new()?;
-//     let stream = TokioTcpStream::connect("127.0.0.1:7878").await?;
-
-
-//     // Read user input of username and password
-//     let mut credentials = String::new();
-//     println!("Enter your username: ");
-//     io::stdin().read_line(&mut credentials)?;
-//     let username = credentials.trim().to_string();
-
-//     let password = rpassword::prompt_password("Enter your password: ").unwrap();
-//     let password = password.trim().to_string();
-
-//     // Combine username and password with a space separator
-//     let credentials = format!("{} {}", username, password);
-
-//     stream.write(credentials.as_bytes()).await?;
-//     stream.flush().await?;
-
-//     let (sender, receiver) = channel::<String>();
-
-//     let mut stream = TokioTlsConnector::from(connector).connect("127.0.0.1", stream).await?;
-
-//     // Spawn a separate task to read messages from the server and print them to the console
-//     let cloned_stream = stream.clone();
-//     tokio::spawn(async move {
-//         let mut reader = BufReader::new(cloned_stream);
-//         loop {
-//             let mut buf = String::new();
-//             if reader.read_line(&mut buf).await.is_err() {
-//                 break;
-//             }
-//             sender.send(buf.trim().to_string()).unwrap();
-//         }
-//     });
-
-//     // Spawn a separate task to read messages from the console and send them to the server
-//     tokio::spawn(async move {
-//         let mut stdin = io::stdin();
-//         loop {
-//             let mut buf = String::new();
-//             stdin.read_line(&mut buf).unwrap();
-
-//             stream.write_all(buf.as_bytes()).await.unwrap();
-//             stream.flush().await.unwrap();
-
-//             if buf.trim() == "stop" {
-//                 break;
-//             }
-//         }
-//     });
-
-//     // Read messages from the receiver and print them to the console
-//     loop {
-//         match receiver.recv() {
-//             Ok(msg) => println!("{}", msg),
-//             Err(_) => break,
-//         }
-//     }
-
-//     Ok(())
-// }

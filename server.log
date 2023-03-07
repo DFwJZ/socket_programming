@@ -1,8 +1,26 @@
-2023:03:07:06:35:36.047331 [ INFO] Server: Server started successfully!
-2023:03:07:06:35:38.75573 [ INFO] Server: Connection established at 127.0.0.1:51880 with client from 127.0.0.1:51880!
-2023:03:07:06:35:40.729369 [ INFO] Received message from client: 3
-2023:03:07:06:35:40.731675 [ INFO] Response message sent by server: 3
-2023:03:07:06:35:42.243415 [ INFO] Received message from client: sfd
-2023:03:07:06:35:42.243856 [ INFO] Response message sent by server: SFD
-2023:03:07:06:35:44.16645 [ INFO] Received message from client: wiw
-2023:03:07:06:35:44.166834 [ INFO] Response message sent by server: WIW
+2023:03:07:06:51:07.43657 [ INFO] Server: Server started successfully!
+2023:03:07:06:51:10.284055 [ INFO] Server: Connection established at 127.0.0.1:52433 with client from 127.0.0.1:52433!
+2023:03:07:06:51:12.032314 [ INFO] user: 1 password: 2 
+
+2023:03:07:06:51:12.033292 [ INFO] Disconnection detected from the client side.
+Listening again on port 7878...
+2023:03:07:06:52:49.443956 [ INFO] Server: Connection established at 127.0.0.1:52505 with client from 127.0.0.1:52505!
+2023:03:07:06:52:50.740727 [ INFO] user: 1 password: 2 
+
+2023:03:07:06:52:54.707542 [ INFO] Received message from client: helllow
+2023:03:07:06:52:54.708107 [ INFO] Response message sent by server: HELLLOW
+2023:03:07:06:56:07.831609 [ INFO] Server: Connection established at 127.0.0.1:52656 with client from 127.0.0.1:52656!
+2023:03:07:06:56:08.980466 [ INFO] user: 3 password: 4 
+
+2023:03:07:06:56:10.486064 [ INFO] Received message from client: fhsadf
+2023:03:07:06:56:10.486434 [ INFO] Response message sent by server: FHSADF
+2023:03:07:06:56:12.200644 [ INFO] Received message from client: saf
+2023:03:07:06:56:12.201847 [ INFO] Response message sent by server: SAF
+2023:03:07:06:56:14.102353 [ INFO] Received message from client: fsa
+2023:03:07:06:56:14.102777 [ INFO] Response message sent by server: FSA
+2023:03:07:06:56:15.360845 [ INFO] Received message from client: sadf
+2023:03:07:06:56:15.361287 [ INFO] Response message sent by server: SADF
+2023:03:07:06:56:16.789484 [ INFO] Disconnection detected from the client side.
+Listening again on port 7878...
+2023:03:07:06:56:17.93404 [ INFO] Disconnection detected from the client side.
+Listening again on port 7878...
