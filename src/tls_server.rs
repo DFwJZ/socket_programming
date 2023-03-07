@@ -1,92 +1,66 @@
-#[macro_use] 
-extern crate lazy_static;
-use std::collections::HashMap;
-use std::sync::{Mutex, Arc};
-use std::io::prelude::*;
-use std::net::TcpListener;
-use std::net::TcpStream;
-use std::thread;
-use std::fs::File;
-use native_tls::{Identity, TlsAcceptor, TlsStream};
+use std::sync::Arc;
+use std::vec;
+use native_tls::Identity;
+use tokio_native_tls::{ TlsStream};
 use log::LevelFilter;
 use log::Log;
 use simplelog::*;
-use rpassword;
 use time::macros::format_description;
+use tokio::{
+    io::{AsyncWriteExt, AsyncReadExt},
+    net::{ TcpListener as TokioTcpListener, TcpStream as TokioTcpStream},
+    fs::File,
+};
 
-lazy_static! {
-    static ref USERS: Arc<Mutex<HashMap<String, String>>> = Arc::new(Mutex::new([("user1".to_string(), "password1".to_string()),
-                                            ("user2".to_string(), "password2".to_string()),
-                                            ("1".to_string(), "2".to_string())].iter().cloned().collect()));
 
-    static ref TOKENS: Arc<Mutex<HashMap<String, String>>> = Arc::new(Mutex::new(HashMap::new()));
-}
+async fn handle_control_channel(mut control_stream: TlsStream<TokioTcpStream>) {
 
-fn handle_control_channel(stream: TlsStream<TcpStream>, users: Arc<Mutex<HashMap<String, String>>>, tokens: Arc<Mutex<HashMap<String, String>>>) {
 
-    let mut control_stream = stream;
-    let users = match users.lock() {
-        Ok(guard) => guard,
-        Err(e) => {
-            println!("Error locking users: {}", e);
-            return;
-        }
-    };
+    let mut buf = [0; 1024];
+    let bytes_read = control_stream.read(&mut buf).await.unwrap();
+    let bulk_message = String::from_utf8_lossy(&buf[..bytes_read]);
 
-    let mut tokens = match tokens.lock() {
-            Ok(guard) => guard,
-            Err(e) => {
-                println!("Error locking tokens: {}", e);
-                return;
-            }
-        };
-
-    let mut buffer = [0; 512];
-    // read the client's message
-    let bytes_read = control_stream.read(&mut buffer).unwrap();
-    let incoming_message = String::from_utf8_lossy(&buffer[..bytes_read]);
-    let credentials: Vec<&str> = incoming_message.trim().split(" ").collect();
+    let credentials: Vec<&str> = bulk_message.trim().split(" ").collect();
 
     // parse username and password from received credentials
     let username = credentials[0];
     let password = credentials[1];
-    log::info!("user: {} password: {} \n", username, password);
+    println!("{} {}", username, password);
+    // log::info!("user: {} password: {} \n", username, password);
 
     // Validating client's credentials
-    if let Some(stored_password) = users.get(username) {
-        if stored_password == password {
+    // if let Some(stored_password) = users.get(username) {
+    //     if stored_password == password {
+    // if (username == "1" && password == "2") || (username == "3" && password == "4") {
             // generate token
-            let token = format!("{}:{}", username, password);
+            // let token = format!("{}:{}", username, password);
 
-            // store token and client address
-            tokens.insert(token.clone(), control_stream.get_ref().peer_addr().unwrap().to_string());
+            // // store token and client address
+            // tokens.insert(token.clone(), control_stream.get_ref().peer_addr().unwrap().to_string());
 
-            // send success message to client
-            let success = "Authentication successful!\r\n".to_string();
-            control_stream.write(success.as_bytes()).unwrap();
-            control_stream.flush().unwrap();
+            // // send success message to client
+            // let success = "Authentication successful!\r\n".to_string();
+            // control_stream.write(success.as_bytes()).unwrap();
+            // control_stream.flush().unwrap();
             
-            if control_stream.flush().is_ok() {
-                println!("Server: server successually authenticated!")
-            }
+            // if control_stream.flush().is_ok() {
+            //     println!("Server: server successually authenticated!")
+            // }
             
-            // handling cient request
-            if !tokens.contains_key(&token) {
-                println!("Error: Invalid token");
-                log::error!("Invalid token");
-                return;
-            }
+            // // handling cient request
+            // if !tokens.contains_key(&token) {
+            //     println!("Error: Invalid token");
+            //     log::error!("Invalid token");
+            //     return;
+            // }
             
             let mut data_stream = control_stream;
+      
+
             loop {
-                let mut buffer = [0; 512];
-                let bytes_read = data_stream
-                    .read(&mut buffer)
-                    .unwrap_or_else(|e| {
-                        println!("Error reading from stream: {:?}", e);
-                        log::error!("Error reading from stream: {:?}", e);
-                        0
-                    });
+                let mut buf = [0; 1024];
+                let bytes_read = data_stream.read(&mut buf).await.unwrap();
+                
                 
                 if bytes_read == 0 {
                     println!("Server: Disconnection detected from the client side.\nListening again on port 7878...");
@@ -94,19 +68,21 @@ fn handle_control_channel(stream: TlsStream<TcpStream>, users: Arc<Mutex<HashMap
                     break;
                 }
 
-                let incoming_message = String::from_utf8_lossy(&buffer[..bytes_read]);
-                log::info!("Received message from client: {}", incoming_message);
-                println!("Server: Received message from client: {}", incoming_message);
+                let bulk_message = String::from_utf8_lossy(&buf[..bytes_read]);
+                println!("Server: Received message from client: {}", bulk_message);
 
-                let incoming_message = incoming_message.trim_end_matches("\r\n\r\n");
+                log::info!("Received message from client: {}", bulk_message);
+                println!("Server: Received message from client: {}", bulk_message);
+
+                let incoming_message = bulk_message.trim_end_matches("\r\n\r\n");
 
                 if incoming_message.to_lowercase() == "stop" {
                     println!("User initiated the disconnection!!!!!!\nListening again on port 7878...");
                     log::info!("User initiated the disconnection!!!!!!");
                     log::info!("Listening again on port 7878...");
                     let stop_message = "disconnect";
-                    data_stream.write(stop_message.as_bytes()).unwrap();
-                    data_stream.flush().unwrap();
+                    data_stream.write(stop_message.as_bytes()).await.unwrap();
+                    data_stream.flush().await.unwrap();
                     break;
                 }
 
@@ -115,29 +91,29 @@ fn handle_control_channel(stream: TlsStream<TcpStream>, users: Arc<Mutex<HashMap
                 println!("Server: Response message sent by server: {}", uppercase_message);
                 log::info!("Response message sent by server: {}", uppercase_message);
                 let response = format!("HTTP/1.1 200 OK\r\n\r\n{}", uppercase_message);
-                data_stream.write(response.as_bytes()).unwrap();
-                data_stream.flush().unwrap();
+                data_stream.write(response.as_bytes()).await.unwrap();
+                data_stream.flush().await.unwrap();
          
                 
             }
-        } else {    
-            // send failure message to client
-            let failure = "Server: Password authentication failed".to_string();
-            log::error!("Password authentication failed for user {}", username);
-            control_stream.write(failure.as_bytes()).unwrap();
-            control_stream.flush().unwrap();
-        } 
-    }else {
-        // send failure message to client
-        let failure = "Server: Username authentication failed".to_string();
-        control_stream.write(failure.as_bytes()).unwrap();
-        control_stream.flush().unwrap();
-        log::error!("Username authentication failed for user {}", username);
-    }
+        // } else {    
+        //     // send failure message to client
+        //     let failure = "Server: Password authentication failed".to_string();
+        //     log::error!("Password authentication failed for user {}", username);
+        //     control_stream.write(failure.as_bytes()).unwrap();
+        //     control_stream.flush().unwrap();
+        // } 
+    // }else {
+    //     // send failure message to client
+    //     let failure = "Server: Username authentication failed".to_string();
+    //     control_stream.write(failure.as_bytes()).await.unwrap();
+    //     control_stream.flush().await.unwrap();
+    //     log::error!("Username authentication failed for user {}", username);
+    // }
 }
 
 fn create_logger()-> Box<dyn Log>{
-    let log_file = File::create("server.log").unwrap();
+    let log_file = std::fs::File::create("server.log").unwrap();
     let config = ConfigBuilder::new()
     .set_time_format_custom(format_description!("[year]:[month]:[day]:[hour]:[minute]:[second].[subsecond]"))
     .set_level_padding(LevelPadding::Left)
@@ -146,58 +122,65 @@ fn create_logger()-> Box<dyn Log>{
     let logger = WriteLogger::new(LevelFilter::Info, config, log_file);
 
     Box::new(logger)
-}
+} 
+
+#[tokio::main]
+async fn main() {
+    
+    // Bind to a socket 7878 and start listening for incoming connections.
+    let listener = TokioTcpListener::bind("127.0.0.1:7878").await.unwrap();
+    // Using mpsc to create channels to handle multiple clients
 
 
-fn main() {
-    let mut file = File::open("./certs/my_socket_prog.test.pkcs12.pfx").unwrap();
+    // Create the TLS acceptor.
+    let mut file = File::open("./certs/my_socket_prog.test.pkcs12.pfx").await.unwrap();
     let mut identity = vec![];
-    file.read_to_end(&mut identity).unwrap();
-    let cert_password = rpassword::prompt_password("Enter your password to start your server: ").unwrap();
+    file.read_to_end(&mut identity).await.unwrap();
+    // let cert_password = rpassword::prompt_password("Enter your password to start your server: ").unwrap();
+    let cert_password = String::from("Godblessme7787!");
     let cert_password = cert_password.trim().to_string();
 
     let identity = Identity::from_pkcs12(&identity, &cert_password).unwrap();
+    
+    let native_acceptor = native_tls::TlsAcceptor::new(identity).unwrap();
+    let tls_acceptor = tokio_native_tls::TlsAcceptor::from(native_acceptor);
 
-    let acceptor = TlsAcceptor::new(identity).unwrap();
-    let acceptor = Arc::new(acceptor);
-    let listener = TcpListener::bind("127.0.0.1:7878").unwrap();
-
-    let mut threads = vec![];
+    // Creating logger
     let logging_handle = create_logger();
     let logging_handle: Box<dyn Log> = Box::new(logging_handle);
 
     log::set_boxed_logger(logging_handle).unwrap();
     log::set_max_level(LevelFilter::Debug);
 
-    log::info!("Listening on port 7878...");
-    println!("Listening again on port 7878...");
+    let start_message = "Server: Server started successfully!".to_string();
 
-    for stream in listener.incoming() {
-        match stream {
-            Ok(stream) => {
-                let acceptor = acceptor.clone();
-                log::info!("Accepted connection from {}", stream.peer_addr().unwrap());
-                let users = USERS.clone();
-                let tokens = TOKENS.clone();
-                let _logging_handle = log::logger();
+    log::info!("{}", start_message);
+    println!("{}", start_message);
 
-                let handle = thread::spawn(move || {
-                    let ssl_stream = acceptor.accept(stream).unwrap();
-                    handle_control_channel(ssl_stream, users, tokens);
-                });
+    // sharing ownership of tls_acceptor with the spawned task, so that it can be used in the spawned task,
+    // ultimately to reduce memory usage.
+    // TlsAcceptor is not thread safe, so we need to use Arc to share ownership of it.
+    let tls_acceptor = Arc::new(tls_acceptor);
 
-                threads.push(handle);
-            }
-            Err(e) => log::error!("Error: {}", e),
-        }
+    loop {
+        // Asynchronously wait for an inbound socket.
+        let (socket, remote_addr) = listener.accept().await.unwrap();
+
+        // Log connection details.
+        let connection_msg = format!("Server: Connection established at {} with client from {}!", socket.peer_addr().unwrap(), remote_addr);
+        log::info!("{}", connection_msg);
+        println!("{}", connection_msg);
+
+        // Create a new TLS acceptor for each communication.
+        let tls_acceptor = tls_acceptor.clone();
+
+        tokio::spawn(async move {
+            // Accept the TLS connection.
+            let tls_stream = tls_acceptor.accept(socket).await.unwrap();
+            println!("Server: TLS connection established with client from {}!",  remote_addr);
+
+            handle_control_channel(tls_stream).await;
+        });
     }
-
-    // Wait for all the threads to finish
-    for thread in threads {
-        thread.join().unwrap();
-    }
-
-    // Cleanup the logging handle
-    log::logger().flush();
 
 }

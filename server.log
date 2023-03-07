@@ -1,8 +1,8 @@
-2023:02:13:04:53:57.888991 [ INFO] Listening on port 7878...
-2023:02:13:04:54:00.159902 [ INFO] Accepted connection from 127.0.0.1:54506
-2023:02:13:04:54:03.555462 [ INFO] u: 1 p: 2 
-
-2023:02:13:04:54:07.573301 [ INFO] Received message from client: hello world?
-2023:02:13:04:54:07.573749 [ INFO] Response message sent by server: HELLO WORLD?
-2023:02:13:04:54:09.263298 [ INFO] Disconnection detected from the client side.
-Listening again on port 7878...
+2023:03:07:06:35:36.047331 [ INFO] Server: Server started successfully!
+2023:03:07:06:35:38.75573 [ INFO] Server: Connection established at 127.0.0.1:51880 with client from 127.0.0.1:51880!
+2023:03:07:06:35:40.729369 [ INFO] Received message from client: 3
+2023:03:07:06:35:40.731675 [ INFO] Response message sent by server: 3
+2023:03:07:06:35:42.243415 [ INFO] Received message from client: sfd
+2023:03:07:06:35:42.243856 [ INFO] Response message sent by server: SFD
+2023:03:07:06:35:44.16645 [ INFO] Received message from client: wiw
+2023:03:07:06:35:44.166834 [ INFO] Response message sent by server: WIW
